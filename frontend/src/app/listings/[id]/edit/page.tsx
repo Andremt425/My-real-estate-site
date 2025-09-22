@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { apiCall } from "@/utils/api";
 
-export default function NewListing() {
+interface Listing {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+}
+
+export default function EditListing() {
+  const params = useParams();
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: "",
@@ -12,26 +20,42 @@ export default function NewListing() {
     price: "",
   });
 
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        const data = await apiCall<{ listing: Listing }>(
+          `/listings/${params.id}`
+        );
+        setFormData({
+          title: data.listing.title,
+          description: data.listing.description,
+          price: data.listing.price.toString(),
+        });
+      } catch (error) {
+        console.error("Error fetching listing:", error);
+      }
+    };
+    fetchListing();
+  }, [params.id]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await apiCall("/listings", {
-        method: "POST",
+      await apiCall(`/listings/${params.id}`, {
+        method: "PUT",
         body: {
-          ...formData,
           price: parseFloat(formData.price),
         },
       });
-
-      router.push("/listings");
+      router.push(`/listings/${params.id}`);
     } catch (error) {
-      console.error("Error creating listing:", error);
+      console.error("Error updating listing:", error);
     }
   };
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Create New Listing</h1>
+      <h1 className="text-3xl font-bold mb-6">Edit Listing</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block mb-2">Title</label>
@@ -42,7 +66,7 @@ export default function NewListing() {
               setFormData({ ...formData, title: e.target.value })
             }
             className="w-full p-2 border rounded"
-            required
+            disabled
           />
         </div>
         <div>
@@ -54,7 +78,7 @@ export default function NewListing() {
             }
             className="w-full p-2 border rounded"
             rows={4}
-            required
+            disabled
           />
         </div>
         <div>
@@ -74,7 +98,7 @@ export default function NewListing() {
         <button
           type="submit"
           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-          Create Listing
+          Update Listing
         </button>
       </form>
     </div>

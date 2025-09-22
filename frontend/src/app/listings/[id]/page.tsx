@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { apiCall } from "@/utils/api";
 
 interface Listing {
   id: number;
@@ -18,10 +19,9 @@ export default function ListingDetail() {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:8000/listings/${params.id}`
+        const data = await apiCall<{ listing: Listing }>(
+          `/listings/${params.id}`
         );
-        const data = await response.json();
         setListing(data.listing);
       } catch (error) {
         console.error("Error fetching listing:", error);
@@ -32,7 +32,7 @@ export default function ListingDetail() {
 
   const handleDelete = async () => {
     try {
-      await fetch(`http://localhost:8000/listings/${params.id}`, {
+      await apiCall(`/listings/${params.id}`, {
         method: "DELETE",
       });
       router.push("/listings");

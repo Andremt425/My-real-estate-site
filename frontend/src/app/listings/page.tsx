@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiCall } from "@/utils/api";
 
 interface Listing {
   id: number;
@@ -15,16 +16,26 @@ export default function Listings() {
 
   useEffect(() => {
     const fetchListings = async () => {
-      const response = await fetch("http://localhost:8000/listings");
-      const data = await response.json();
-      setListings(data);
+      try {
+        const data = await apiCall<Listing[]>("/listings");
+        setListings(data);
+      } catch (error) {
+        console.error("Error fetching listings:", error);
+      }
     };
     fetchListings();
   }, []);
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Available Properties</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Available Properties</h1>
+        <Link
+          href="/listings/new"
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          Add New Listing
+        </Link>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {listings.map((listing) => (
           <div key={listing.id} className="border rounded-lg p-4 shadow-md">
